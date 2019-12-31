@@ -278,8 +278,8 @@ pub fn seal_commit<T: AsRef<Path>>(
         &groth_params,
     )?;
 
-    // Delete cached MTs that are no longer needed.
-    TemporaryAux::<DefaultTreeHasher, DefaultPieceHasher>::delete(t_aux)?;
+    // Discard cached MTs that are no longer needed.
+    TemporaryAux::<DefaultTreeHasher, DefaultPieceHasher>::compact(t_aux)?;
 
     let mut buf = Vec::with_capacity(
         SINGLE_PARTITION_PROOF_LEN * usize::from(PoRepProofPartitions::from(porep_config)),
