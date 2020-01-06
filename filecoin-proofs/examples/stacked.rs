@@ -9,7 +9,7 @@ use gperftools::profiler::PROFILER;
 use log::{info, warn};
 use memmap::MmapMut;
 use memmap::MmapOptions;
-use merkletree::store::{StoreConfig, DEFAULT_CACHED_ABOVE_BASE_LAYER};
+use merkletree::store::StoreConfig;
 use paired::bls12_381::{Bls12, Fr};
 use rand::Rng;
 use std::fs::{File, OpenOptions};
@@ -193,7 +193,7 @@ fn do_the_work<H: 'static>(
     let config = StoreConfig::new(
         cache_dir.path(),
         CacheKey::CommDTree.to_string(),
-        DEFAULT_CACHED_ABOVE_BASE_LAYER,
+        StoreConfig::default_cached_above_base_layer(nodes),
     );
 
     let (pub_in, priv_in, d) = if bench_only {

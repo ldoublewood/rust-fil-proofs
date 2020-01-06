@@ -104,20 +104,19 @@ pub fn seal_pre_commit<R: AsRef<Path>, T: AsRef<Path>, S: AsRef<Path>>(
         _,
     >>::setup(&compound_setup_params)?;
 
+    let tree_size = compound_public_params.vanilla_params.wrapper_graph.size();
+
     // MT for original data is always named tree-d, and it will be
     // referenced later in the process as such.
     let config = StoreConfig::new(
         cache_path.as_ref(),
         CacheKey::CommDTree.to_string(),
-        2, //FIXME: DEFAULT_CACHED_ABOVE_BASE_LAYER,
+        StoreConfig::default_cached_above_base_layer(tree_size),
     );
 
     info!("building merkle tree for the original data");
-    let data_tree = create_merkle_tree::<DefaultPieceHasher>(
-        Some(config.clone()),
-        compound_public_params.vanilla_params.wrapper_graph.size(),
-        &data,
-    )?;
+    let data_tree =
+        create_merkle_tree::<DefaultPieceHasher>(Some(config.clone()), tree_size, &data)?;
 
     let comm_d_root: Fr = data_tree.root().into();
     let comm_d = commitment_from_fr::<Bls12>(comm_d_root);

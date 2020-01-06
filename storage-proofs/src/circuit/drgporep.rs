@@ -559,12 +559,12 @@ mod tests {
         // MT for original data is always named tree-d, and it will be
         // referenced later in the process as such.
         use crate::stacked::CacheKey;
-        use merkletree::store::{StoreConfig, DEFAULT_CACHED_ABOVE_BASE_LAYER};
+        use merkletree::store::StoreConfig;
         let cache_dir = tempfile::tempdir().unwrap();
         let config = StoreConfig::new(
             cache_dir.path(),
             CacheKey::CommDTree.to_string(),
-            DEFAULT_CACHED_ABOVE_BASE_LAYER,
+            StoreConfig::default_cached_above_base_layer(sp.drg.nodes),
         );
 
         let pp = drgporep::DrgPoRep::<PedersenHasher, BucketGraph<_>>::setup(&sp)
@@ -741,7 +741,7 @@ mod tests {
 
         let rng = &mut XorShiftRng::from_seed(crate::TEST_SEED);
 
-        let nodes = 5;
+        let nodes = 8;
         let degree = BASE_DEGREE;
         let challenges = vec![1, 3];
 
@@ -773,12 +773,12 @@ mod tests {
         // MT for original data is always named tree-d, and it will be
         // referenced later in the process as such.
         use crate::stacked::CacheKey;
-        use merkletree::store::{StoreConfig, DEFAULT_CACHED_ABOVE_BASE_LAYER};
+        use merkletree::store::StoreConfig;
         let cache_dir = tempfile::tempdir().unwrap();
         let config = StoreConfig::new(
             cache_dir.path(),
             CacheKey::CommDTree.to_string(),
-            DEFAULT_CACHED_ABOVE_BASE_LAYER,
+            StoreConfig::default_cached_above_base_layer(nodes),
         );
 
         let (tau, aux) = drgporep::DrgPoRep::<H, _>::replicate(

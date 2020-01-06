@@ -934,10 +934,21 @@ impl<'a, H: 'static + Hasher, G: 'static + Hasher> StackedDrg<'a, H, G> {
         ensure!(tree_d.len() == tree_r_last.len(), "Invalid tree_r.");
         ensure!(tree_d.len() == tree_q.len(), "Invlaid tree_q.");
 
-        tree_d_config.size = Some(tree_d.len());
-        tree_r_last_config.size = Some(tree_r_last.len());
-        tree_c_config.size = Some(tree_c.len());
-        tree_q_config.size = Some(tree_q.len());
+        // Update the size and value of caching above the base levels, which is reduced
+        // if the tree size cannot afford the default.
+        let update_tree_config = |config: &mut StoreConfig, len: usize, leafs: usize| {
+            config.size = Some(len);
+            config.levels = StoreConfig::default_cached_above_base_layer(leafs);
+        };
+
+        update_tree_config(&mut tree_d_config, tree_d.len(), tree_d.leafs());
+        update_tree_config(
+            &mut tree_r_last_config,
+            tree_r_last.len(),
+            tree_r_last.leafs(),
+        );
+        update_tree_config(&mut tree_c_config, tree_c.len(), tree_c.leafs());
+        update_tree_config(&mut tree_q_config, tree_q.len(), tree_q.leafs());
 
         Ok((
             Tau {
@@ -1009,7 +1020,6 @@ mod tests {
     use super::*;
 
     use ff::Field;
-    use merkletree::store::DEFAULT_CACHED_ABOVE_BASE_LAYER;
     use paired::bls12_381::Bls12;
     use rand::{Rng, SeedableRng};
     use rand_xorshift::XorShiftRng;
@@ -1085,7 +1095,7 @@ mod tests {
         let config = StoreConfig::new(
             cache_dir.path(),
             CacheKey::CommDTree.to_string(),
-            DEFAULT_CACHED_ABOVE_BASE_LAYER,
+            StoreConfig::default_cached_above_base_layer(nodes),
         );
 
         StackedDrg::<H, Blake2sHasher>::replicate(
@@ -1166,7 +1176,7 @@ mod tests {
         let config = StoreConfig::new(
             cache_dir.path(),
             CacheKey::CommDTree.to_string(),
-            DEFAULT_CACHED_ABOVE_BASE_LAYER,
+            StoreConfig::default_cached_above_base_layer(nodes),
         );
 
         StackedDrg::<H, Blake2sHasher>::replicate(
@@ -1250,7 +1260,7 @@ mod tests {
         let config = StoreConfig::new(
             cache_dir.path(),
             CacheKey::CommDTree.to_string(),
-            DEFAULT_CACHED_ABOVE_BASE_LAYER,
+            StoreConfig::default_cached_above_base_layer(n),
         );
 
         let pp = StackedDrg::<H, Blake2sHasher>::setup(&sp).expect("setup failed");
