@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::{Path, PathBuf};
@@ -353,11 +353,25 @@ pub fn verify_post(
 ) -> Result<bool> {
     info!("verify_post:start");
 
+    let mut challenge_indexes: HashSet<_> = HashSet::new();
+
+    // Fail early if any sector_challenge_index is duplicated.
+    for winner in winners.iter() {
+        if challenge_indexes.contains(&winner.sector_challenge_index) {
+            return Err(anyhow!(
+                "Invalid PoSt claiming duplicate sector_challenge_index: {}",
+                &winner.sector_challenge_index
+            ));
+        } else {
+            challenge_indexes.insert(&winner.sector_challenge_index);
+        };
+    }
+
     let sector_count = replicas.len() as u64;
     ensure!(sector_count > 0, "Must supply at least one replica");
     ensure!(
         winners.len() == proofs.len(),
-        "Missmatch between winners and proofs"
+        "Mismatch between winners and proofs"
     );
 
     let sectors = replicas.keys().copied().collect();
@@ -370,6 +384,7 @@ pub fn verify_post(
         ElectionPoStCompound::setup(&setup_params)?;
 
     let verifying_key = get_post_verifying_key(post_config)?;
+
     for (proof, winner) in proofs.iter().zip(winners.iter()) {
         let replica = replicas
             .get(&winner.sector_id)

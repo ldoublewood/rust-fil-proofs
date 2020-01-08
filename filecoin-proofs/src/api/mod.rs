@@ -2,14 +2,6 @@ use std::fs::File;
 use std::io::{BufWriter, Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 
-use anyhow::{anyhow, ensure, Context, Result};
-use merkletree::store::{StoreConfig, DEFAULT_CACHED_ABOVE_BASE_LAYER};
-use storage_proofs::drgraph::DefaultTreeHasher;
-use storage_proofs::hasher::Hasher;
-use storage_proofs::sector::SectorId;
-use storage_proofs::stacked::{generate_replica_id, CacheKey, StackedDrg};
-use tempfile::tempfile;
-
 use crate::api::util::as_safe_commitment;
 use crate::constants::{
     DefaultPieceHasher,
@@ -22,6 +14,13 @@ use crate::types::{
     Commitment, PaddedBytesAmount, PieceInfo, PoRepConfig, PoRepProofPartitions, ProverId, Ticket,
     UnpaddedByteIndex, UnpaddedBytesAmount,
 };
+use anyhow::{anyhow, ensure, Context, Result};
+use merkletree::store::{StoreConfig, DEFAULT_CACHED_ABOVE_BASE_LAYER};
+use storage_proofs::drgraph::DefaultTreeHasher;
+use storage_proofs::hasher::Hasher;
+use storage_proofs::sector::SectorId;
+use storage_proofs::stacked::{generate_replica_id, CacheKey, StackedDrg};
+use tempfile::tempfile;
 
 mod post;
 mod seal;
@@ -452,6 +451,58 @@ mod tests {
             assert!(
                 haystack.contains(needle),
                 format!("\"{}\" did not contain \"{}\"", haystack, needle)
+            );
+        } else {
+            panic!("should have failed comm_r to Fr32 conversion");
+        }
+    }
+
+    #[test]
+    fn test_verify_post_duplicate_checking() {
+        init_logger();
+
+        let mut fr_bytes = [1; 32];
+        fr_bytes[31] = 0;
+
+        let out = bytes_into_fr::<Bls12>(&fr_bytes);
+        let mut replicas = BTreeMap::new();
+        replicas.insert(1.into(), PublicReplicaInfo::new(fr_bytes).unwrap());
+        let winner = Candidate {
+            sector_id: 1.into(),
+            partial_ticket: Fr::zero(),
+            ticket: [0; 32],
+            sector_challenge_index: 0,
+        };
+
+        let result = verify_post(
+            PoStConfig {
+                sector_size: SectorSize(SECTOR_SIZE_ONE_KIB),
+                challenge_count: crate::constants::POST_CHALLENGE_COUNT,
+                challenged_nodes: crate::constants::POST_CHALLENGED_NODES,
+            },
+            &[0; 32],
+            1,
+            &[
+                vec![0u8; SINGLE_PARTITION_PROOF_LEN],
+                vec![0u8; SINGLE_PARTITION_PROOF_LEN],
+            ][..],
+            &replicas,
+            &[winner.clone(), winner][..],
+            [0; 32],
+        );
+
+        assert!(
+            result.is_err(),
+            "expected error when passing duplicate winner"
+        );
+
+        if let Err(err) = result {
+            let message = "duplicate sector_challenge_index";
+            let error_string = format!("{}", err);
+
+            assert!(
+                error_string.contains(message),
+                format!("\"{}\" did not contain \"{}\"", error_string, message)
             );
         } else {
             panic!("should have failed comm_r to Fr32 conversion");
