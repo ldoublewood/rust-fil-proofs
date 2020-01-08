@@ -224,21 +224,19 @@ pub fn generate_candidates(
         .into_par_iter()
         .map(|(id, replica)| {
             // Ensure that any associated cached data persisted is discarded and our tree is compacted by this point.
-            let f_aux_path = replica.cache_dir_path().join(CacheKey::TAux.to_string());
-            if Path::new(&f_aux_path).exists() {
-                let t_aux = {
-                    let mut aux_bytes = vec![];
-                    let mut f_aux = File::open(&f_aux_path)
-                        .with_context(|| format!("could not open path={:?}", f_aux_path))?;
-                    f_aux
-                        .read_to_end(&mut aux_bytes)
-                        .with_context(|| format!("could not read from path={:?}", f_aux_path))?;
+            let t_aux = {
+                let mut aux_bytes = vec![];
+                let f_aux_path = replica.cache_dir_path().join(CacheKey::TAux.to_string());
+                let mut f_aux = File::open(&f_aux_path)
+                    .with_context(|| format!("could not open path={:?}", f_aux_path))?;
+                f_aux
+                    .read_to_end(&mut aux_bytes)
+                    .with_context(|| format!("could not read from path={:?}", f_aux_path))?;
 
-                    deserialize(&aux_bytes)
-                }?;
+                deserialize(&aux_bytes)
+            }?;
 
-                TemporaryAux::compact(t_aux)?;
-            }
+            TemporaryAux::compact(t_aux)?;
 
             replica
                 .merkle_tree(tree_size, tree_leafs)
