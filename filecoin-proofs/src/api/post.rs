@@ -191,6 +191,7 @@ pub fn generate_candidates(
         .iter()
         .map(|c| {
             if let Some(replica) = replicas.get(c) {
+	        info!("candidate is {}",c);
                 Ok((c, replica))
             } else {
                 Err(anyhow!(
