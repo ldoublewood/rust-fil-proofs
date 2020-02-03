@@ -1,5 +1,6 @@
 use std::collections::BTreeMap;
 use std::fmt;
+use log::info;
 use std::marker::PhantomData;
 
 use anyhow::{bail, ensure, Context};
@@ -174,6 +175,7 @@ fn generate_candidate<H: Hasher>(
 ) -> Result<Candidate> {
     // 1. read the data for each challenge
     let mut data = vec![0u8; POST_CHALLENGE_COUNT * POST_CHALLENGED_NODES * NODE_SIZE];
+    info!("tree: {:?}", tree);
     for n in 0..POST_CHALLENGE_COUNT {
         let challenge_start =
             generate_leaf_challenge(randomness, sector_challenge_index, n as u64, sector_size)?;
@@ -320,6 +322,9 @@ impl<'a, H: 'a + Hasher> ProofScheme<'a> for ElectionPoSt<'a, H> {
         pub_inputs: &'b Self::PublicInputs,
         priv_inputs: &'b Self::PrivateInputs,
     ) -> Result<Self::Proof> {
+        info!("priv_input: {:?}", priv_inputs);
+        info!("pub_input: {:?}", pub_inputs);
+        info!("pub_param: {:?}", pub_params);
         // 1. Inclusions proofs of all challenged leafs in all challenged ranges
         let tree = &priv_inputs.tree;
         let sector_size = pub_params.sector_size;

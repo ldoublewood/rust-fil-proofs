@@ -216,6 +216,7 @@ pub fn generate_candidates(
     let unique_trees_res: Vec<_> = unique_challenged_replicas
         .into_par_iter()
         .map(|(id, replica)| {
+	    info!("id:{}, replica: {:?}",id,replica);
             replica
                 .merkle_tree(tree_size, tree_leafs)
                 .map(|tree| (*id, tree))
@@ -224,7 +225,7 @@ pub fn generate_candidates(
 
     // resolve results
     let trees: BTreeMap<SectorId, Tree> = unique_trees_res.into_iter().collect::<Result<_, _>>()?;
-
+    info!("trees:{:?}", trees);
     let candidates = election_post::generate_candidates::<DefaultTreeHasher>(
         public_params.vanilla_params.sector_size,
         &challenged_sectors,
