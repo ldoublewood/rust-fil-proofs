@@ -51,7 +51,6 @@ use storage_proofs_core::fr32::fr_into_bytes;
 
 use crate::encode::{decode, encode};
 use crate::PoRep;
-use std::env;
 
 pub const TOTAL_PARENTS: usize = 37;
 

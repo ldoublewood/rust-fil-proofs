@@ -96,9 +96,9 @@ impl<Tree: 'static + MerkleTreeTrait> PrivateReplicaInfo<Tree> {
             let f_aux_path = cache_dir.join(CacheKey::PAux.to_string());
             let aux_bytes = std::fs::read(&f_aux_path)
                 .with_context(|| format!("could not read from path={:?}", f_aux_path))?;
-
             deserialize(&aux_bytes)
         }?;
+info!("f_aux_path:{:?}", aux);
 
         ensure!(replica.exists(), "Sealed replica does not exist");
 
