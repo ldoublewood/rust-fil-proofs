@@ -4,6 +4,7 @@ use anyhow::ensure;
 use byteorder::{ByteOrder, LittleEndian};
 use generic_array::typenum::Unsigned;
 use log::trace;
+use log::info;
 use paired::bls12_381::Fr;
 use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -377,6 +378,7 @@ impl<'a, Tree: 'a + MerkleTreeTrait> ProofScheme<'a> for FallbackPoSt<'a, Tree> 
             .zip(pub_inputs.sectors.chunks(num_sectors_per_chunk))
             .enumerate()
         {
+            info!("j: {}", j);
             ensure!(
                 pub_sectors_chunk.len() <= num_sectors_per_chunk,
                 "inconsistent number of public sectors: {} > {}",
@@ -410,6 +412,7 @@ impl<'a, Tree: 'a + MerkleTreeTrait> ProofScheme<'a> for FallbackPoSt<'a, Tree> 
                     &comm_r_last,
                 )) != AsRef::<[u8]>::as_ref(comm_r)
                 {
+                    info!("pub_sector: {:?}", pub_sector);
                     return Ok(false);
                 }
 
@@ -432,6 +435,7 @@ impl<'a, Tree: 'a + MerkleTreeTrait> ProofScheme<'a> for FallbackPoSt<'a, Tree> 
 
                     // validate all comm_r_lasts match
                     if inclusion_proof.root() != comm_r_last {
+                        info!("pub_sector: {:?}", pub_sector);
                         return Ok(false);
                     }
 
@@ -440,10 +444,12 @@ impl<'a, Tree: 'a + MerkleTreeTrait> ProofScheme<'a> for FallbackPoSt<'a, Tree> 
                         inclusion_proof.expected_len(pub_params.sector_size as usize / NODE_SIZE);
 
                     if expected_path_length != inclusion_proof.path().len() {
+                        info!("pub_sector: {:?}", pub_sector);
                         return Ok(false);
                     }
 
                     if !inclusion_proof.validate(challenged_leaf_start as usize) {
+                        info!("pub_sector: {:?}", pub_sector);
                         return Ok(false);
                     }
                 }
