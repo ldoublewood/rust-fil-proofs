@@ -652,8 +652,18 @@ impl<'a, Tree: 'static + MerkleTreeTrait, G: 'static + Hasher> StackedDrg<'a, Tr
         TreeArity: PoseidonArity,
     {
         info!("generating tree c using the CPU");
+        use std::env;
         measure_op(GenerateTreeC, || {
             info!("Building column hashes");
+            let minus_cpus = if let Ok(num) = env::var("SEALING_NINUS_CPU") {
+                if let Ok(num) = num.parse() {
+                    num
+                } else {
+                    0
+                }
+            } else {
+                0
+            };
 
             let mut trees = Vec::with_capacity(tree_count);
             for (i, config) in configs.iter().enumerate() {
@@ -661,7 +671,7 @@ impl<'a, Tree: 'static + MerkleTreeTrait, G: 'static + Hasher> StackedDrg<'a, Tr
                     vec![<Tree::Hasher as Hasher>::Domain::default(); nodes_count];
 
                 rayon::scope(|s| {
-                    let n = num_cpus::get();
+                    let n = num_cpus::get() - minus_cpus;
 
                     // only split if we have at least two elements per thread
                     let num_chunks = if n > nodes_count * 2 { 1 } else { n };

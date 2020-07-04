@@ -79,6 +79,7 @@ pub trait ProofScheme<'a> {
             let partition_pub_in = Self::with_partition((*pub_in).clone(), Some(k)); //
 
             if !Self::verify(pub_params, &partition_pub_in, proof)? {
+                info!("bad! k: {}",k);
                 return Ok(false);
             }
         }
