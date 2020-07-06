@@ -651,7 +651,7 @@ impl<'a, Tree: 'static + MerkleTreeTrait, G: 'static + Hasher> StackedDrg<'a, Tr
         use std::env;
         measure_op(GenerateTreeC, || {
             info!("Building column hashes");
-            let minus_cpus = if let Ok(num) = env::var("SEALING_NINUS_CPU") {
+            let minus_cpus = if let Ok(num) = env::var("SEAL_MINUS_CPU") {
                 if let Ok(num) = num.parse() {
                     num
                 } else {
